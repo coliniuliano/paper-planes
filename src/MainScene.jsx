@@ -84,10 +84,16 @@ function Scene() {
     const scrollSpeedMultiplier = 2;
     useFrame((_state, delta) => {
         const treeRows = treesRef.current.children;
+        const numTreeRows = treeRows.length;
+
         treeRows.forEach(treeRow => {
-            treeRow.position.x += delta * scrollSpeedMultiplier;
+            // Make sure there's never a huge delta that would move many rows out of bounds
+            const scaledDelta = delta % treeTileSize;
+            treeRow.position.x += scaledDelta * scrollSpeedMultiplier;
 
             if (treeRow.position.x > 0) {
+                // Note delta can be like 300 for example so all could go out of frame at once
+                treeRow.position.x -= numTreeRows * treeTileSize;
                 treeRow.children.forEach((child, i) => {
                     // This kinda sucks beacuse it requires knowledge of how <Tree> is structured
                     // since the color is on the 2nd mesh and other properties are on the whole group
@@ -103,9 +109,10 @@ function Scene() {
                     child.scale.y = scale;
 
                     const threeColor = new Color(color).convertLinearToSRGB();
-                    child.children[1].material.color.set(threeColor);
+                    if (child.children[1]) {
+                        child.children[1].material.color.set(threeColor);
+                    }
                 });
-                treeRow.position.x = -gridSize;
             }
         });
     });
