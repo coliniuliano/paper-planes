@@ -6,7 +6,7 @@ import { Tree } from './tree.jsx'
 import { useRef } from 'react'
 import { Color, MeshBasicMaterial, Vector3, DoubleSide, MeshStandardMaterial } from 'three'
 import gsap from 'gsap'
-import { useControls } from 'leva'
+import { button, useControls } from 'leva'
 
 // Returns a grid of trees as a 2d array where each row is a <group>
 // Note that it will not reutrn an array of length gridSize if step != 1
@@ -63,7 +63,7 @@ function randomizeTreeProperties(col, step, radiusFromCenter) {
 
 export default function MainScene()
 {
-    return <Canvas
+    return <><Canvas
         shadows
         camera={{
             fov: 45,
@@ -74,6 +74,9 @@ export default function MainScene()
     >
         <Scene />
     </Canvas>
+
+    <button className='barrelRollButton'>Ghetto Barrel Roll</button>
+    </>
 }
 
 function Scene() {
@@ -140,9 +143,33 @@ function Scene() {
     const numPlanes = 150;
     const planeRefs = [];
 
-    window.flipPlane = (i) => {
-        console.log(planeRefs[i]);
-    }
+    const oddsOfFlipping = 0.25;
+    useControls({
+        barrelRoll: button(() => {
+            planeRefs.forEach((planeRef) => {
+                if (Math.random() > oddsOfFlipping) {
+                    return;
+                }
+                const dir = planeRef.current.position.z < 0 ? 1 : -1;
+                const delay = Math.random() * 0.5;
+                const duration = 0.5 + (Math.random() * 0.5);
+                gsap.to(planeRef.current.rotation, 
+                    {
+                        x: planeRef.current.rotation.x + ((Math.PI * 2) * dir),
+                        delay,
+                        duration
+                    }
+                );
+                gsap.to(planeRef.current.position,
+                    {
+                        z: planeRef.current.position.z + (2 * dir),
+                        delay,
+                        duration
+                    }
+                );
+            })
+        })
+    });
 
     const planeColors = ['#faedcb', '#c9e4de', '#c6def1', '#dbcdf0', '#f2c6de', '#f8d9c4'];
     // const planeColors = ['#5e347c', '#eb1376', '#0a877f', '#f8841f', '#c4a998'];
@@ -151,7 +178,12 @@ function Scene() {
     <>
         <Perf position='top-left' minimal />
             
-        <OrbitControls maxPolarAngle={Math.PI / 2 - 0.1} ref={orbitRef} makeDefault onChange={onChange} />
+        <OrbitControls 
+            ref={orbitRef}
+            maxPolarAngle={Math.PI / 2 - 0.1}
+            makeDefault 
+            onChange={onChange} 
+        />
 
         <Lights />
 
@@ -175,7 +207,6 @@ function Scene() {
                             onClick={() => {
                                 // Do a barrel roll
                                 const dir = ref.current.position.z < 0 ? 1 : -1;
-                                console.log(ref.current.rotation);
                                 gsap.to(ref.current.rotation, 
                                     {x: ref.current.rotation.x + ((Math.PI * 2) * dir)}
                                 );
@@ -202,10 +233,6 @@ function Scene() {
                 {treeRows}
             </group>
         </group>
-
-        <Html>
-
-        </Html>
     </>
     );
 }
