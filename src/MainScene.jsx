@@ -38,6 +38,11 @@ function generateInitialTreeRows(gridSize = 10, step = 2, radiusFromCenter = ste
     return treeRows;
 }
 
+// Forest Green
+// const treeColors = ['#4a6741', '#3f5a36', '#374f2f', '#304529', '#22311d', '#3f6621'];
+// Fall Foliage
+const treeColors = ['#606c38', '#283618', '#4a6741', '#3f5a36', '#374f2f', '#304529', '#22311d', '#3f6621'];
+
 function randomizeTreeProperties(col, step, radiusFromCenter) {
     const xRan = (step / 2) + ((Math.random() - 0.5) * radiusFromCenter);
     const zRan = (step / 2) + ((Math.random() - 0.5) * radiusFromCenter);
@@ -51,8 +56,10 @@ function randomizeTreeProperties(col, step, radiusFromCenter) {
     const scale = Math.random() / 2 + 0.5;
 
     // Pick a number from 3 to 9 to be used in hex code as green
-    const randomGreen = 3 + Math.floor(Math.random() * 7);
-    const color = `#3f${randomGreen}${randomGreen}21`;
+    // const randomGreen = 3 + Math.floor(Math.random() * 7);
+    // const color = `#3f${randomGreen}${randomGreen}21`;
+
+    const color = treeColors[Math.floor(Math.random() * treeColors.length)];
 
     return {position, rotation, scale, color};
 }
@@ -86,7 +93,7 @@ function Scene() {
     const paperPlane = useGLTF('./plane.gltf');
 
     // Infinite scrolling
-    const scrollSpeedMultiplier = 2;
+    const scrollSpeedMultiplier = 1;
     useFrame((_state, delta) => {
         const treeRows = treesRef.current.children;
         const numTreeRows = treeRows.length;
@@ -133,29 +140,19 @@ function Scene() {
         PaperPlane: paperPlane.nodes['paper_plane_']
     };
 
-    const numPlanes = 100;
+    const numPlanes = 150;
     const planeRefs = [];
 
     window.flipPlane = (i) => {
         console.log(planeRefs[i]);
     }
 
-    // Plane color controls
-    useControls({
-        planeColor: {
-            value: '#d0d0d0',
-            onChange: (val) => {
-                planeRefs.forEach((planeRef) => {
-                    console.log(`Setting color ${val}`)
-                    planeRef.current.color = new Color(val);
-                })
-            }
-        }
-    });
+    const planeColors = ['#faedcb', '#c9e4de', '#c6def1', '#dbcdf0', '#f2c6de', '#f8d9c4'];
+    // const planeColors = ['#5e347c', '#eb1376', '#0a877f', '#f8841f', '#c4a998'];
 
     return (
     <>
-        <Perf position='top-left'  />
+        <Perf position='top-left' minimal />
             
         <OrbitControls maxPolarAngle={Math.PI / 2 - 0.1} ref={orbitRef} makeDefault onChange={onChange} />
 
@@ -168,15 +165,18 @@ function Scene() {
                     const randomX = 5 + (Math.random() * 3.5);
                     const randomY = 7 + (Math.random() * 2);
                     const randomZ = -2 + (Math.random() * 4);
+                    const color = planeColors[Math.floor(Math.random() * planeColors.length)];
+                    const threeColor = new Color(color).convertSRGBToLinear();
                     const ref = planeRefs[i] = useRef();
                     return <Float key={i}>
                         <PaperPlane 
                             ref={ref}
-                            scale={0.5}
+                            scale={0.6}
                             position={[randomX, randomY, randomZ]} 
                             rotation={[-Math.PI * 0.5, 0, Math.PI * 0.5]}  
-                            color='#d0d0d0'
+                            color={threeColor}
                             onClick={() => {
+                                console.log(ref.current);
                                 gsap.fromTo(ref.current.position, {z: randomZ}, {z: randomZ + 1});
                             }}
                         />
