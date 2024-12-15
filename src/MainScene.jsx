@@ -1,10 +1,12 @@
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { Float, Html, Merged, OrbitControls, useGLTF } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import {Perf} from 'r3f-perf'
 import Lights from './Lights.jsx'
 import { Tree } from './tree.jsx'
 import { useRef } from 'react'
-import { Color, Vector3 } from 'three'
+import { Color, MeshBasicMaterial, Vector3, DoubleSide, MeshStandardMaterial } from 'three'
+import gsap from 'gsap'
+import { useControls } from 'leva'
 
 // Returns a grid of trees as a 2d array where each row is a <group>
 // Note that it will not reutrn an array of length gridSize if step != 1
@@ -80,6 +82,9 @@ function Scene() {
 
     const treesRef = useRef();
 
+    // Paper plane test
+    const paperPlane = useGLTF('./plane.gltf');
+
     // Infinite scrolling
     const scrollSpeedMultiplier = 2;
     useFrame((_state, delta) => {
@@ -123,6 +128,31 @@ function Scene() {
     const onChange = () => {
         console.log(orbitRef.current.object.position);
     }
+
+    const planeNodes = {
+        PaperPlane: paperPlane.nodes['paper_plane_']
+    };
+
+    const numPlanes = 100;
+    const planeRefs = [];
+
+    window.flipPlane = (i) => {
+        console.log(planeRefs[i]);
+    }
+
+    // Plane color controls
+    useControls({
+        planeColor: {
+            value: '#d0d0d0',
+            onChange: (val) => {
+                planeRefs.forEach((planeRef) => {
+                    console.log(`Setting color ${val}`)
+                    planeRef.current.color = new Color(val);
+                })
+            }
+        }
+    });
+
     return (
     <>
         <Perf position='top-left'  />
@@ -130,6 +160,30 @@ function Scene() {
         <OrbitControls maxPolarAngle={Math.PI / 2 - 0.1} ref={orbitRef} makeDefault onChange={onChange} />
 
         <Lights />
+
+        {/* Paper plane instances in 1 call */}
+        <Merged meshes={planeNodes}>
+            {({PaperPlane}) => {
+                return [...Array(numPlanes)].map((_, i) => {
+                    const randomX = 5 + (Math.random() * 3.5);
+                    const randomY = 7 + (Math.random() * 2);
+                    const randomZ = -2 + (Math.random() * 4);
+                    const ref = planeRefs[i] = useRef();
+                    return <Float key={i}>
+                        <PaperPlane 
+                            ref={ref}
+                            scale={0.5}
+                            position={[randomX, randomY, randomZ]} 
+                            rotation={[-Math.PI * 0.5, 0, Math.PI * 0.5]}  
+                            color='#d0d0d0'
+                            onClick={() => {
+                                gsap.fromTo(ref.current.position, {z: randomZ}, {z: randomZ + 1});
+                            }}
+                        />
+                    </Float>
+                })
+            }}
+        </Merged>
 
         {/* Ground plane helps see where the tree grid is positioned */}
         <mesh name="ground" receiveShadow rotation-x={-Math.PI * 0.5} scale={gridSize}>
@@ -144,6 +198,10 @@ function Scene() {
                 {treeRows}
             </group>
         </group>
+
+        <Html>
+
+        </Html>
     </>
     );
 }
