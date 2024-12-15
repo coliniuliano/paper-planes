@@ -38,9 +38,6 @@ function generateInitialTreeRows(gridSize = 10, step = 2, radiusFromCenter = ste
     return treeRows;
 }
 
-// Forest Green
-// const treeColors = ['#4a6741', '#3f5a36', '#374f2f', '#304529', '#22311d', '#3f6621'];
-// Fall Foliage
 const treeColors = ['#606c38', '#283618', '#4a6741', '#3f5a36', '#374f2f', '#304529', '#22311d', '#3f6621'];
 
 function randomizeTreeProperties(col, step, radiusFromCenter) {
@@ -159,7 +156,7 @@ function Scene() {
         <Lights />
 
         {/* Paper plane instances in 1 call */}
-        <Merged meshes={planeNodes}>
+        <Merged meshes={planeNodes} castShadow receiveShadow>
             {({PaperPlane}) => {
                 return [...Array(numPlanes)].map((_, i) => {
                     const randomX = 5 + (Math.random() * 3.5);
@@ -176,8 +173,15 @@ function Scene() {
                             rotation={[-Math.PI * 0.5, 0, Math.PI * 0.5]}  
                             color={threeColor}
                             onClick={() => {
-                                console.log(ref.current);
-                                gsap.fromTo(ref.current.position, {z: randomZ}, {z: randomZ + 1});
+                                // Do a barrel roll
+                                const dir = ref.current.position.z < 0 ? 1 : -1;
+                                console.log(ref.current.rotation);
+                                gsap.to(ref.current.rotation, 
+                                    {x: ref.current.rotation.x + ((Math.PI * 2) * dir)}
+                                );
+                                gsap.to(ref.current.position,
+                                    {z: ref.current.position.z + (0.5 * dir)}
+                                );
                             }}
                         />
                     </Float>
